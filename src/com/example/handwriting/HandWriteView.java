@@ -10,7 +10,10 @@ import android.graphics.Paint.Cap;
 import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -28,10 +31,16 @@ public class HandWriteView extends View {
 	private ArrayList<Path> mPaths = new ArrayList<Path>();
 	private ArrayList<Path> mBackPaths = new ArrayList<Path>();
 	
+	private static final int[] SIZES = new int[] {5, 15, 25};
+	
+	private int mColorIndex;
+	
+	private int mPaintSize = SIZES[0];
+	
 	public HandWriteView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		
-		init();
+		initPaint();
 	}
 
 	public HandWriteView(Context context, AttributeSet attrs) {
@@ -42,17 +51,6 @@ public class HandWriteView extends View {
 		this(context, null);
 	}
 	
-	private void init() {
-		
-		mPaint = new Paint();
-		mPaint.setColor(Color.BLUE);
-		mPaint.setStrokeWidth(5);
-		mPaint.setAntiAlias(true);
-		mPaint.setDither(true);
-		mPaint.setStrokeCap(Cap.ROUND);
-		mPaint.setStrokeJoin(Join.ROUND);
-		mPaint.setStyle(Style.STROKE);
-	}
 
 
 	@Override
@@ -94,6 +92,8 @@ public class HandWriteView extends View {
 	
 	private void touchDown(float x, float y) {
 		
+		mBackPaths.clear();
+		
 		Path path = new Path();
 		path.moveTo(x, y);
 		
@@ -103,6 +103,11 @@ public class HandWriteView extends View {
 		mPaths.add(path);
 	}
 	
+	/**
+	 * 滑动距离超过指定的值时，才会画线
+	 * @param x
+	 * @param y
+	 */
 	private void touchMove(float x, float y) {
 		
 		float diffX = Math.abs(x - mLastX);
@@ -158,24 +163,85 @@ public class HandWriteView extends View {
 		}
 	}
 	
+	/**
+	 * 撤销操作
+	 */
 	public void undo() {
 		
 		popPath();
 		invalidate();
 	}
 	
+	/**
+	 * 重新操作
+	 */
 	public void redo() {
 		
 		pushPath();
 		invalidate();
 	}
 	
+	/**
+	 * 是否能撤销
+	 * @return
+	 */
 	public boolean isCanUndo() {
 		return mPaths.size() > 0;
 	}
 	
+	/**
+	 * 是否能重做
+	 * @return
+	 */
 	public boolean isCanRedo() {
 		return mBackPaths.size() > 0;
 	}
 	
+	public void setPaint(boolean isErase) {
+		
+		if (isErase) {
+			mBackPaths.clear();
+			mPaint.reset();
+			mPaint.setColor(Color.BLUE);
+			mPaint.setStrokeWidth(5);
+			mPaint.setAntiAlias(true);
+			mPaint.setDither(true);
+			mPaint.setStrokeCap(Cap.ROUND);
+			mPaint.setStrokeJoin(Join.ROUND);
+			mPaint.setStyle(Style.STROKE);
+			mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
+		} else {
+			mPaintSize = SIZES[mColorIndex++ % 3];
+			setPaint(mPaintSize);
+		}
+	}
+	
+	private void setPaint(int size) {
+		
+		if (mPaint == null) {
+			mPaint = new Paint();
+		}
+		mPaint.reset();
+		mPaint.setColor(Color.BLUE);
+		mPaint.setStrokeWidth(size);
+		mPaint.setAntiAlias(true);
+		mPaint.setDither(true);
+		mPaint.setStrokeCap(Cap.ROUND);
+		mPaint.setStrokeJoin(Join.ROUND);
+		mPaint.setStyle(Style.STROKE);
+	}
+	
+	private void initPaint() {
+		if (mPaint == null) {
+			mPaint = new Paint();
+		}
+		mPaint.reset();
+		mPaint.setColor(Color.BLUE);
+		mPaint.setStrokeWidth(mPaintSize);
+		mPaint.setAntiAlias(true);
+		mPaint.setDither(true);
+		mPaint.setStrokeCap(Cap.ROUND);
+		mPaint.setStrokeJoin(Join.ROUND);
+		mPaint.setStyle(Style.STROKE);
+	}
 }

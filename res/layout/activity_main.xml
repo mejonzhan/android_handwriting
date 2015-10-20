@@ -23,6 +23,21 @@
             android:layout_height="wrap_content"
             android:text="redo"/>
         
+         <Button 
+            android:id="@+id/erase_path"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:text="erase"/>
+         
+         <Button 
+            android:id="@+id/set_size"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="bold size"/>
+        
     </LinearLayout>
     
     <com.example.handwriting.HandWriteView
